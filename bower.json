@@ -1,0 +1,28 @@
+{
+  "name": "purescript-avar",
+  "homepage": "https://github.com/slamdata/purescript-avar",
+  "authors": [
+    "Nathan Faubion <nathan@n-son.com>"
+  ],
+  "description": "Low-level interface for asynchronous variables",
+  "main": "",
+  "keywords": [
+    "PureScript",
+    "AVar"
+  ],
+  "license": "Apache-2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "purescript-eff": "^3.1.0",
+    "purescript-maybe": "^3.0.0",
+    "purescript-either": "^3.1.0",
+    "purescript-functions": "^3.0.0",
+    "purescript-exceptions": "^3.0.0"
+  }
+}
