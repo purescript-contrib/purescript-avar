@@ -260,11 +260,9 @@ function drainVar (left, right, avar) {
         if (p = takeHead(ps)) {
           runEff(p.cb(value));
         }
-
         while (r = takeHead(rs)) {
           runEff(r(value));
         }
-
         if (t = takeHead(ts)) {
           runEff(t(value));
         }

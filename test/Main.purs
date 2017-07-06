@@ -169,6 +169,7 @@ test_cancel = test "cancel" do
   c1 ← putVar v1 "a" $ traverse_ \_ → modifyRef ref (_ <> "a")
   c2 ← putVar v1 "b" $ traverse_ \_ → modifyRef ref (_ <> "b")
   c3 ← putVar v1 "c" $ traverse_ \_ → modifyRef ref (_ <> "c")
+  c1
   c2
   _  ← tryTakeVar v1
   _  ← tryTakeVar v1
@@ -186,8 +187,9 @@ test_cancel = test "cancel" do
   c8 ← readVar v3 $ traverse_ \_ → modifyRef ref (_ <> "h")
   c9 ← readVar v3 $ traverse_ \_ → modifyRef ref (_ <> "i")
   c8
+  c9
   _  ← tryPutVar v3 "a"
-  eq "acdfgi" <$> readRef ref
+  eq "cdfg" <$> readRef ref
 
 main ∷ TestEff Unit
 main = do
