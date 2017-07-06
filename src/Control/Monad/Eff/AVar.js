@@ -39,7 +39,7 @@ function putLast (queue, value) {
   return cell;
 }
 
-function takeTail (queue) {
+function takeLast (queue) {
   var cell;
   switch (queue.size) {
   case 0:
@@ -94,8 +94,8 @@ function deleteCell (cell) {
   if (cell.queue === null) {
     return;
   }
-  if (cell.queue.tail === cell) {
-    takeTail(cell.queue);
+  if (cell.queue.last === cell) {
+    takeLast(cell.queue);
     return;
   }
   if (cell.queue.head === cell) {
@@ -191,7 +191,7 @@ exports._readVar = function (left, right, avar, cb) {
 exports._tryPutVar = function (left, right, avar, value) {
   return function () {
     if (avar.value === EMPTY && avar.error === null) {
-      putLast(avar.puts, { value: value, cb: null });
+      avar.value = value;
       drainVar(left, right, avar);
       return true;
     } else {
@@ -234,10 +234,9 @@ function drainVar (left, right, avar) {
     return;
   }
 
-  var ps  = avar.puts;
-  var ts  = avar.takes;
-  var rs  = avar.reads;
-  var tcs = null;
+  var ps = avar.puts;
+  var ts = avar.takes;
+  var rs = avar.reads;
   var p, r, t, value, rsize;
 
   avar.draining = true;
@@ -253,7 +252,7 @@ function drainVar (left, right, avar) {
     if (avar.error !== null) {
       value = left(avar.error);
       // Error callback ordering is somewhat undefined, but we try to at least
-      // be somewhat fair by interleaving puts and takes.
+      // be fair by interleaving puts and takes.
       while (1) {
         if (ps.size === 0 && ts.size === 0 && rs.size === 0) {
           break;
@@ -295,7 +294,7 @@ function drainVar (left, right, avar) {
       }
     }
 
-    if (p !== null && p.cb !== null) {
+    if (p !== null) {
       runEff(p.cb(right(void 0)));
     }
 
