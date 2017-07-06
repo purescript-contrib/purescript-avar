@@ -203,7 +203,7 @@ exports._tryPutVar = function (left, right, avar, value) {
 exports._tryTakeVar = function (left, right, nothing, just, avar) {
   return function () {
     var value = avar.value;
-    if (value === EMPTY || avar.error !== null) {
+    if (value === EMPTY) {
       return nothing;
     } else {
       avar.value = EMPTY;
@@ -225,7 +225,7 @@ exports._tryReadVar = function (nothing, just, avar) {
 
 exports.isEmptyVar = function (avar) {
   return function () {
-    return avar.value === EMPTY || avar.error !== null;
+    return avar.value === EMPTY;
   };
 };
 
