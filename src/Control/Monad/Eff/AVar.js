@@ -166,7 +166,7 @@ exports._takeVar = function (left, right, avar, cb) {
       runEff(cb(left(avar.error)));
       return NO_EFFECT;
     }
-    var cell = putLast(avar.takes, { cb: cb, read: false });
+    var cell = putLast(avar.takes, cb);
     drainVar(left, right, avar);
     return function () {
       deleteCell(cell);
@@ -180,7 +180,7 @@ exports._readVar = function (left, right, avar, cb) {
       runEff(cb(left(avar.error)));
       return NO_EFFECT;
     }
-    var cell = putLast(avar.reads, { cb: cb, read: true });
+    var cell = putLast(avar.reads, cb);
     drainVar(left, right, avar);
     return function () {
       deleteCell(cell);
@@ -263,11 +263,11 @@ function drainVar (left, right, avar) {
         }
 
         while (r = takeHead(rs)) {
-          runEff(r.cb(value));
+          runEff(r(value));
         }
 
         if (t = takeHead(ts)) {
-          runEff(t.cb(value));
+          runEff(t(value));
         }
       }
       break;
@@ -287,11 +287,11 @@ function drainVar (left, right, avar) {
       // We only want to process the reads queued up before running these
       // callbacks so we guard on rsize.
       while (rsize-- && (r = takeHead(rs))) {
-        runEff(r.cb(right(value)));
+        runEff(r(right(value)));
       }
       if (t !== null) {
         avar.value = EMPTY;
-        runEff(t.cb(right(value)));
+        runEff(t(right(value)));
       }
     }
 
