@@ -1,3 +1,6 @@
+/* globals exports, setTimeout */
+/* jshint -W097 */
+
 "use strict";
 
 var EMPTY = {};
@@ -16,58 +19,109 @@ function MutableCell (queue, value) {
   this.prev  = null;
 }
 
-function putQueue (queue, value) {
+function putLast (queue, value) {
   var cell = new MutableCell(queue, value);
-  cell.prev = queue.tail;
-  queue.last.next = cell;
-  queue.last = cell;
-  queue.size++;
-  return cell;
-}
-
-function insertQueue (queue, value) {
-  var cell = new MutableCell(queue, value);
-  cell.next = queue.head;
-  queue.head.prev = cell;
-  queue.head = cell;
-  queue.size++;
-  return cell;
-}
-
-function takeQueue (queue) {
-  if (queue.size === 0) {
-    return null;
+  switch (queue.size) {
+  case 0:
+    queue.head = cell;
+    break;
+  case 1:
+    cell.prev = queue.head;
+    queue.head.next = cell;
+    queue.last = cell;
+    break;
+  default:
+    cell.prev = queue.last;
+    queue.last.next = cell;
+    queue.last = cell;
   }
-  var cell = queue.head;
-  queue.head = cell.next;
-  queue.head.prev = null;
+  queue.size++;
+  return cell;
+}
+
+function takeTail (queue) {
+  var cell;
+  switch (queue.size) {
+  case 0:
+    return null;
+  case 1:
+    cell = queue.head;
+    queue.head = null;
+    break;
+  case 2:
+    cell = queue.last;
+    queue.head.next = null;
+    queue.last = null;
+    break;
+  default:
+    cell = queue.last;
+    queue.last = cell.prev;
+    queue.last.next = null;
+  }
+  cell.prev = null;
+  cell.queue = null;
   queue.size--;
+  return cell.value;
+}
+
+function takeHead (queue) {
+  var cell;
+  switch (queue.size) {
+  case 0:
+    return null;
+  case 1:
+    cell = queue.head;
+    queue.head = null;
+    break;
+  case 2:
+    cell = queue.head;
+    queue.last.prev = null;
+    queue.head = queue.last;
+    queue.last = null;
+    break;
+  default:
+    cell = queue.head;
+    queue.head = cell.next;
+    queue.head.prev = null;
+  }
   cell.next = null;
   cell.queue = null;
+  queue.size--;
   return cell.value;
 }
 
 function deleteCell (cell) {
-  if (cell.queue) {
-    if (cell.prev) {
-      cell.prev.next = cell.next;
-    }
-    if (cell.next) {
-      cell.next.prev = cell.prev;
-    }
-    cell.queue = null;
-    cell.value = null;
-    cell.next  = null;
-    cell.prev  = null;
+  if (cell.queue === null) {
+    return;
   }
+  if (cell.queue.tail === cell) {
+    takeTail(cell.queue);
+    return;
+  }
+  if (cell.queue.head === cell) {
+    takeHead(cell.queue);
+    return;
+  }
+  if (cell.prev) {
+    cell.prev.next = cell.next;
+  }
+  if (cell.next) {
+    cell.next.prev = cell.prev;
+  }
+  cell.queue.size--;
+  cell.queue = null;
+  cell.value = null;
+  cell.next  = null;
+  cell.prev  = null;
 }
 
 function AVar () {
-  this.draining  = false;
-  this.error     = null;
-  this.value     = EMPTY;
-  this.consumers = new MutableQueue();
-  this.producers = new MutableQueue();
+  this.draining = false;
+  this.error    = null;
+  this.value    = EMPTY;
+  this.takes    = new MutableQueue();
+  this.reads    = new MutableQueue();
+  this.puts     = new MutableQueue();
 }
 
 exports.makeEmptyVar = function () {
@@ -82,22 +136,23 @@ exports.makeVar = function (value) {
   };
 };
 
-exports._killVar = function (left, right, error, avar) {
+exports._killVar = function (left, right, avar, error) {
   return function () {
     if (avar.error === null) {
       avar.error = error;
+      avar.value = EMPTY;
       drainVar(left, right, avar);
     }
   };
 };
 
-exports._putVar = function (left, right, value, avar, cb) {
+exports._putVar = function (left, right, avar, value, cb) {
   return function () {
     if (avar.error !== null) {
       runEff(cb(left(avar.error)));
       return NO_EFFECT;
     }
-    var cell = putQueue(avar.producers, { cb: cb, value: value });
+    var cell = putLast(avar.puts, { cb: cb, value: value });
     drainVar(left, right, avar);
     return function () {
       deleteCell(cell);
@@ -111,7 +166,7 @@ exports._takeVar = function (left, right, avar, cb) {
       runEff(cb(left(avar.error)));
       return NO_EFFECT;
     }
-    var cell = putQueue(avar.consumers, { cb: cb, peek: false, value: value });
+    var cell = putLast(avar.takes, { cb: cb, read: false });
     drainVar(left, right, avar);
     return function () {
       deleteCell(cell);
@@ -125,18 +180,18 @@ exports._readVar = function (left, right, avar, cb) {
       runEff(cb(left(avar.error)));
       return NO_EFFECT;
     }
-    var cell = insertQueue(avar.consumers, { cb: cb, peek: true, value: value });
+    var cell = putLast(avar.reads, { cb: cb, read: true });
     drainVar(left, right, avar);
     return function () {
       deleteCell(cell);
     };
-  }
+  };
 };
 
-exports._tryPutVar = function (left, right, value, avar) {
+exports._tryPutVar = function (left, right, avar, value) {
   return function () {
-    if (avar.value === EMPTY && value.error === null) {
-      putQueue(avar.queue, value);
+    if (avar.value === EMPTY && avar.error === null) {
+      putLast(avar.puts, { value: value, cb: null });
       drainVar(left, right, avar);
       return true;
     } else {
@@ -148,7 +203,7 @@ exports._tryPutVar = function (left, right, value, avar) {
 exports._tryTakeVar = function (left, right, nothing, just, avar) {
   return function () {
     var value = avar.value;
-    if (value === EMPTY || value.error !== null) {
+    if (value === EMPTY || avar.error !== null) {
       return nothing;
     } else {
       avar.value = EMPTY;
@@ -159,11 +214,13 @@ exports._tryTakeVar = function (left, right, nothing, just, avar) {
 };
 
 exports._tryReadVar = function (nothing, just, avar) {
-  if (avar.value === EMPTY || value.error !== null) {
-    return nothing;
-  } else {
-    return just(avar.value);
-  }
+  return function () {
+    if (avar.value === EMPTY) {
+      return nothing;
+    } else {
+      return just(avar.value);
+    }
+  };
 };
 
 exports.isEmptyVar = function (avar) {
@@ -177,61 +234,78 @@ function drainVar (left, right, avar) {
     return;
   }
 
-  var ps    = avar.producers;
-  var cs    = avar.consumers;
-  var value = avar.value;
-  var p, c;
+  var ps  = avar.puts;
+  var ts  = avar.takes;
+  var rs  = avar.reads;
+  var tcs = null;
+  var p, r, t, value, rsize;
 
   avar.draining = true;
 
-  if (avar.error === null) {
-    while (1) {
-      p = null;
-      c = null;
+  /* jshint -W084 */
+  while (1) {
+    p = null;
+    r = null;
+    t = null;
+    value = avar.value;
+    rsize = rs.size;
 
-      if (cs.size === 0 || ps.size === 0) {
-        break;
-      }
-
-      if (value === EMPTY && (p = takeQueue(ps))) {
-        value = avar.value = p.value;
-      }
-
-      if (value !== EMPTY) {
-        value = right(value);
-        while (c = takeQueue(cs)) {
-          runEff(c.cb(value));
-          if (!c.peek) {
-            break;
-          }
-        }
-        value = EMPTY;
-      }
-
-      if (p !== null) {
-        runEff(p.cb(right(void 0)));
-      }
-    }
-  }
-
-  if (avar.error !== null) {
-    value = left(avar.error);
-    while (1) {
-      if (ps.size === 0 && cs.size === 0) {
-        break;
-      }
-      if (p = takeQueue(ps)) {
-        runEff(p.cb(value));
-      }
-      while (c = takeQueue(cs)) {
-        runEff(c.cb(value));
-        if (!c.peek) {
+    if (avar.error !== null) {
+      value = left(avar.error);
+      // Error callback ordering is somewhat undefined, but we try to at least
+      // be somewhat fair by interleaving puts and takes.
+      while (1) {
+        if (ps.size === 0 && ts.size === 0 && rs.size === 0) {
           break;
         }
+        if (p = takeHead(ps)) {
+          runEff(p.cb(value));
+        }
+
+        while (r = takeHead(rs)) {
+          runEff(r.cb(value));
+        }
+
+        if (t = takeHead(ts)) {
+          runEff(t.cb(value));
+        }
+      }
+      break;
+    }
+
+    // Process the next put. We do not immediately invoke the callback
+    // because we want to preserve ordering. If there are takes/reads
+    // we want to run those first.
+    if (value === EMPTY && (p = takeHead(ps))) {
+      avar.value = value = p.value;
+    }
+
+    if (value !== EMPTY) {
+      // We go ahead and queue up the next take for the same reasons as
+      // above. Invoking the read callbacks can affect the mutable queue.
+      t = takeHead(ts);
+      // We only want to process the reads queued up before running these
+      // callbacks so we guard on rsize.
+      while (rsize-- && (r = takeHead(rs))) {
+        runEff(r.cb(right(value)));
+      }
+      if (t !== null) {
+        avar.value = EMPTY;
+        runEff(t.cb(right(value)));
       }
     }
-    break;
+
+    if (p !== null && p.cb !== null) {
+      runEff(p.cb(right(void 0)));
+    }
+
+    // Callbacks could have queued up more items so we need to guard on the
+    // actual mutable properties.
+    if (avar.value === EMPTY && ps.size === 0 || avar.value !== EMPTY && ts.size === 0) {
+      break;
+    }
   }
+  /* jshint +W084 */
 
   avar.draining = false;
 }
