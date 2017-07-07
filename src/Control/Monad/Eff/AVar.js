@@ -251,21 +251,14 @@ function drainVar (left, right, avar) {
 
     if (avar.error !== null) {
       value = left(avar.error);
-      // Error callback ordering is somewhat undefined, but we try to at least
-      // be fair by interleaving puts and takes.
-      while (1) {
-        if (ps.size === 0 && ts.size === 0 && rs.size === 0) {
-          break;
-        }
-        if (p = takeHead(ps)) {
-          runEff(p.cb(value));
-        }
-        while (r = takeHead(rs)) {
-          runEff(r(value));
-        }
-        if (t = takeHead(ts)) {
-          runEff(t(value));
-        }
+      while (p = takeHead(ps)) {
+        runEff(p.cb(value));
+      }
+      while (r = takeHead(rs)) {
+        runEff(r(value));
+      }
+      while (t = takeHead(ts)) {
+        runEff(t(value));
       }
       break;
     }
