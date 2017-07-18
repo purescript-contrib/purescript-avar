@@ -4,7 +4,6 @@
 "use strict";
 
 var EMPTY = {};
-var NO_EFFECT = function () {};
 
 function MutableQueue () {
   this.head = null;
@@ -115,24 +114,22 @@ function deleteCell (cell) {
   cell.prev  = null;
 }
 
-function AVar () {
+function AVar (value) {
   this.draining = false;
   this.error    = null;
-  this.value    = EMPTY;
+  this.value    = value;
   this.takes    = new MutableQueue();
   this.reads    = new MutableQueue();
   this.puts     = new MutableQueue();
 }
 
 exports.makeEmptyVar = function () {
-  return new AVar();
+  return new AVar(EMPTY);
 };
 
 exports.makeVar = function (value) {
   return function () {
-    var avar = new AVar();
-    avar.value = value;
-    return avar;
+    return new AVar(value);
   };
 };
 
@@ -148,10 +145,6 @@ exports._killVar = function (left, right, avar, error) {
 
 exports._putVar = function (left, right, avar, value, cb) {
   return function () {
-    if (avar.error !== null) {
-      runEff(cb(left(avar.error)));
-      return NO_EFFECT;
-    }
     var cell = putLast(avar.puts, { cb: cb, value: value });
     drainVar(left, right, avar);
     return function () {
@@ -162,10 +155,6 @@ exports._putVar = function (left, right, avar, value, cb) {
 
 exports._takeVar = function (left, right, avar, cb) {
   return function () {
-    if (avar.error !== null) {
-      runEff(cb(left(avar.error)));
-      return NO_EFFECT;
-    }
     var cell = putLast(avar.takes, cb);
     drainVar(left, right, avar);
     return function () {
@@ -176,10 +165,6 @@ exports._takeVar = function (left, right, avar, cb) {
 
 exports._readVar = function (left, right, avar, cb) {
   return function () {
-    if (avar.error !== null) {
-      runEff(cb(left(avar.error)));
-      return NO_EFFECT;
-    }
     var cell = putLast(avar.reads, cb);
     drainVar(left, right, avar);
     return function () {
