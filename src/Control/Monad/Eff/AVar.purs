@@ -79,10 +79,10 @@ readVar avar cb = Fn.runFn4 _readVar Left Right avar cb
 tryReadVar ∷ ∀ eff a. AVar a → AVarEff eff (Maybe a)
 tryReadVar avar = Fn.runFn3 _tryReadVar Nothing Just avar
 
-foreign import _killVar ∷ ∀ eff a. Fn.Fn4 (Error → Either Error a) (a → Either Error a) (AVar a) Error (AVarEff eff Unit)
-foreign import _putVar ∷ ∀ eff a. Fn.Fn5 (Error → Either Error a) (a → Either Error a) (AVar a) a (AVarCallback eff Unit) (AVarEff eff (AVarEff eff Unit))
-foreign import _tryPutVar ∷ ∀ eff a. Fn.Fn4 (Error → Either Error a) (a → Either Error a) (AVar a) a (AVarEff eff Boolean)
-foreign import _takeVar ∷ ∀ eff a. Fn.Fn4 (Error → Either Error a) (a → Either Error a) (AVar a) (AVarCallback eff a) (AVarEff eff (AVarEff eff Unit))
-foreign import _tryTakeVar ∷ ∀ eff a. Fn.Fn5 (Error → Either Error a) (a → Either Error a) (Maybe a) (a → Maybe a) (AVar a) (AVarEff eff (Maybe a))
-foreign import _readVar ∷ ∀ eff a. Fn.Fn4 (Error → Either Error a) (a → Either Error a) (AVar a) (AVarCallback eff a) (AVarEff eff (AVarEff eff Unit))
+foreign import _killVar ∷ ∀ eff a. Fn.Fn4 (∀ x y. x → Either x y) (∀ x y. y → Either x y) (AVar a) Error (AVarEff eff Unit)
+foreign import _putVar ∷ ∀ eff a. Fn.Fn5 (∀ x y. x → Either x y) (∀ x y. y → Either x y) (AVar a) a (AVarCallback eff Unit) (AVarEff eff (AVarEff eff Unit))
+foreign import _tryPutVar ∷ ∀ eff a. Fn.Fn4 (∀ x y. x → Either x y) (∀ x y. y → Either x y) (AVar a) a (AVarEff eff Boolean)
+foreign import _takeVar ∷ ∀ eff a. Fn.Fn4 (∀ x y. x → Either x y) (∀ x y. y → Either x y) (AVar a) (AVarCallback eff a) (AVarEff eff (AVarEff eff Unit))
+foreign import _tryTakeVar ∷ ∀ eff a. Fn.Fn5 (∀ x y. x → Either x y) (∀ x y. y → Either x y) (Maybe a) (a → Maybe a) (AVar a) (AVarEff eff (Maybe a))
+foreign import _readVar ∷ ∀ eff a. Fn.Fn4 (∀ x y. x → Either x y) (∀ x y. y → Either x y) (AVar a) (AVarCallback eff a) (AVarEff eff (AVarEff eff Unit))
 foreign import _tryReadVar ∷ ∀ eff a. Fn.Fn3 (Maybe a) (a → Maybe a) (AVar a) (AVarEff eff (Maybe a))
