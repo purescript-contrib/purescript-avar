@@ -5,6 +5,10 @@
     "Nathan Faubion <nathan@n-son.com>"
   ],
   "description": "Low-level interface for asynchronous variables",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/slamdata/purescript-avar.git"
+  },
   "main": "",
   "keywords": [
     "PureScript",
