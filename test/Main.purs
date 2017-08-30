@@ -32,13 +32,13 @@ test_tryRead_empty = test "tryRead/empty" do
 test_tryPut_full ∷ TestEff Unit
 test_tryPut_full = test "tryPut/full" do
   var ← makeVar "foo"
-  res ← tryPutVar var "bar"
+  res ← tryPutVar "bar" var
   pure (not res)
 
 test_tryPut_empty ∷ TestEff Unit
 test_tryPut_empty = test "tryPut/empty" do
   var ← makeEmptyVar
-  res ← tryPutVar var "foo"
+  res ← tryPutVar "foo" var
   val ← tryReadVar var
   pure (res && val == Just "foo")
 
@@ -53,7 +53,7 @@ test_tryTake_empty ∷ TestEff Unit
 test_tryTake_empty = test "tryTake/empty" do
   var  ← makeEmptyVar
   res1 ← tryTakeVar var
-  res2 ← tryPutVar var "foo"
+  res2 ← tryPutVar "foo" var
   res3 ← tryTakeVar var
   pure (res1 == Nothing && res2 && res3 == Just "foo")
 
@@ -61,7 +61,7 @@ test_put_take ∷ TestEff Unit
 test_put_take = test "put/take" do
   ref ← newRef ""
   var ← makeEmptyVar
-  _ ← putVar var "foo" $ traverse_ \_ →
+  _ ← putVar "foo" var $ traverse_ \_ →
     modifyRef ref (_ <> "bar")
   _ ← takeVar var $ traverse_ \val →
     modifyRef ref (_ <> val)
@@ -71,7 +71,7 @@ test_put_read_take ∷ TestEff Unit
 test_put_read_take = test "put/read/take" do
   ref ← newRef ""
   var ← makeEmptyVar
-  _ ← putVar var "foo" $ traverse_ \_ →
+  _ ← putVar "foo" var $ traverse_ \_ →
     modifyRef ref (_ <> "bar")
   _ ← readVar var $ traverse_ \val →
     modifyRef ref (_ <> val <> "baz")
@@ -85,7 +85,7 @@ test_take_put = test "take/put" do
   var ← makeEmptyVar
   _ ← takeVar var $ traverse_ \val →
     modifyRef ref (_ <> val)
-  _ ← putVar var "foo" $ traverse_ \_ →
+  _ ← putVar "foo" var $ traverse_ \_ →
     modifyRef ref (_ <> "bar")
   eq "foobar" <$> readRef ref
 
@@ -97,7 +97,7 @@ test_take_read_put = test "take/read/put" do
     modifyRef ref (_ <> val)
   _ ← readVar var $ traverse_ \val →
     modifyRef ref (_ <> val <> "baz")
-  _ ← putVar var "foo" $ traverse_ \_ →
+  _ ← putVar "foo" var $ traverse_ \_ →
     modifyRef ref (_ <> "bar")
   eq "foobazfoobar" <$> readRef ref
 
@@ -107,7 +107,7 @@ test_read_put_take = test "read/put/take" do
   var ← makeEmptyVar
   _ ← readVar var $ traverse_ \val →
     modifyRef ref (_ <> val <> "baz")
-  _ ← putVar var "foo" $ traverse_ \_ →
+  _ ← putVar "foo" var $ traverse_ \_ →
     modifyRef ref (_ <> "bar")
   _ ← takeVar var $ traverse_ \val → do
     modifyRef ref (_ <> val)
@@ -121,7 +121,7 @@ test_read_take_put = test "read/take/put" do
     modifyRef ref (_ <> val <> "baz")
     void $ takeVar var $ traverse_ \val' →
       modifyRef ref (_ <> val')
-  _ ← putVar var "foo" $ traverse_ \_ →
+  _ ← putVar "foo" var $ traverse_ \_ →
     modifyRef ref (_ <> "bar")
   eq "foobazbarfoo" <$> readRef ref
 
@@ -129,9 +129,9 @@ test_kill_full ∷ TestEff Unit
 test_kill_full = test "kill/full" do
   ref ← newRef ""
   var ← makeEmptyVar
-  _ ← putVar var "foo" $ traverse_ \_ →
+  _ ← putVar "foo" var $ traverse_ \_ →
     modifyRef ref (_ <> "bar")
-  killVar var (error "Die.")
+  killVar (error "Die.") var
   _ ← readVar var case _ of
     Left err → modifyRef ref (_ <> message err)
     Right _  → modifyRef ref (_ <> "BAD")
@@ -141,7 +141,7 @@ test_kill_empty ∷ TestEff Unit
 test_kill_empty = test "kill/empty" do
   ref ← newRef ""
   var ← makeEmptyVar
-  killVar var (error "Die.")
+  killVar (error "Die.") var
   _ ← readVar var case _ of
     Left err → modifyRef ref (_ <> message err)
     Right _  → modifyRef ref (_ <> "BAD")
@@ -159,16 +159,16 @@ test_kill_pending = test "kill/pending" do
   _ ← takeVar var (cb "b")
   _ ← readVar var (cb "c")
   _ ← readVar var (cb "d")
-  killVar var (error "-die.")
+  killVar (error "-die.") var
   eq "c-die.d-die.a-die.b-die." <$> readRef ref
 
 test_cancel ∷ TestEff Unit
 test_cancel = test "cancel" do
   ref ← newRef ""
   v1 ← makeVar ""
-  c1 ← putVar v1 "a" $ traverse_ \_ → modifyRef ref (_ <> "a")
-  c2 ← putVar v1 "b" $ traverse_ \_ → modifyRef ref (_ <> "b")
-  c3 ← putVar v1 "c" $ traverse_ \_ → modifyRef ref (_ <> "c")
+  c1 ← putVar "a" v1 $ traverse_ \_ → modifyRef ref (_ <> "a")
+  c2 ← putVar "b" v1 $ traverse_ \_ → modifyRef ref (_ <> "b")
+  c3 ← putVar "c" v1 $ traverse_ \_ → modifyRef ref (_ <> "c")
   c1
   c2
   _  ← tryTakeVar v1
@@ -179,16 +179,16 @@ test_cancel = test "cancel" do
   c5 ← takeVar v2 $ traverse_ \_ → modifyRef ref (_ <> "e")
   c6 ← takeVar v2 $ traverse_ \_ → modifyRef ref (_ <> "f")
   c5
-  _  ← tryPutVar v2 "a"
-  _  ← tryPutVar v2 "b"
-  _  ← tryPutVar v2 "c"
+  _  ← tryPutVar "a" v2
+  _  ← tryPutVar "b" v2
+  _  ← tryPutVar "c" v2
   v3 ← makeEmptyVar
   c7 ← readVar v3 $ traverse_ \_ → modifyRef ref (_ <> "g")
   c8 ← readVar v3 $ traverse_ \_ → modifyRef ref (_ <> "h")
   c9 ← readVar v3 $ traverse_ \_ → modifyRef ref (_ <> "i")
   c8
   c9
-  _  ← tryPutVar v3 "a"
+  _  ← tryPutVar "a" v3
   eq "cdfg" <$> readRef ref
 
 main ∷ TestEff Unit

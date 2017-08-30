@@ -133,51 +133,51 @@ exports.makeVar = function (value) {
   };
 };
 
-exports._killVar = function (left, right, avar, error) {
+exports._killVar = function (util, error, avar) {
   return function () {
     if (avar.error === null) {
       avar.error = error;
       avar.value = EMPTY;
-      drainVar(left, right, avar);
+      drainVar(util, avar);
     }
   };
 };
 
-exports._putVar = function (left, right, avar, value, cb) {
+exports._putVar = function (util, value, avar, cb) {
   return function () {
     var cell = putLast(avar.puts, { cb: cb, value: value });
-    drainVar(left, right, avar);
+    drainVar(util, avar);
     return function () {
       deleteCell(cell);
     };
   };
 };
 
-exports._takeVar = function (left, right, avar, cb) {
+exports._takeVar = function (util, avar, cb) {
   return function () {
     var cell = putLast(avar.takes, cb);
-    drainVar(left, right, avar);
+    drainVar(util, avar);
     return function () {
       deleteCell(cell);
     };
   };
 };
 
-exports._readVar = function (left, right, avar, cb) {
+exports._readVar = function (util, avar, cb) {
   return function () {
     var cell = putLast(avar.reads, cb);
-    drainVar(left, right, avar);
+    drainVar(util, avar);
     return function () {
       deleteCell(cell);
     };
   };
 };
 
-exports._tryPutVar = function (left, right, avar, value) {
+exports._tryPutVar = function (util, value, avar) {
   return function () {
     if (avar.value === EMPTY && avar.error === null) {
       avar.value = value;
-      drainVar(left, right, avar);
+      drainVar(util, avar);
       return true;
     } else {
       return false;
@@ -185,36 +185,42 @@ exports._tryPutVar = function (left, right, avar, value) {
   };
 };
 
-exports._tryTakeVar = function (left, right, nothing, just, avar) {
+exports._tryTakeVar = function (util, avar) {
   return function () {
     var value = avar.value;
     if (value === EMPTY) {
-      return nothing;
+      return util.nothing;
     } else {
       avar.value = EMPTY;
-      drainVar(left, right, avar);
-      return just(value);
+      drainVar(util, avar);
+      return util.just(value);
     }
   };
 };
 
-exports._tryReadVar = function (nothing, just, avar) {
+exports._tryReadVar = function (util, avar) {
   return function () {
     if (avar.value === EMPTY) {
-      return nothing;
+      return util.nothing;
     } else {
-      return just(avar.value);
+      return util.just(avar.value);
     }
   };
 };
 
-exports.isEmptyVar = function (avar) {
+exports._status = function (util, avar) {
   return function () {
-    return avar.value === EMPTY;
+    if (avar.error) {
+      return util.killed(avar.error);
+    }
+    if (avar.value === EMPTY) {
+      return util.empty;
+    }
+    return util.filled(avar.value);
   };
 };
 
-function drainVar (left, right, avar) {
+function drainVar (util, avar) {
   if (avar.draining) {
     return;
   }
@@ -235,7 +241,7 @@ function drainVar (left, right, avar) {
     rsize = rs.size;
 
     if (avar.error !== null) {
-      value = left(avar.error);
+      value = util.left(avar.error);
       while (p = takeHead(ps)) {
         runEff(p.cb(value));
       }
@@ -262,16 +268,16 @@ function drainVar (left, right, avar) {
       // We only want to process the reads queued up before running these
       // callbacks so we guard on rsize.
       while (rsize-- && (r = takeHead(rs))) {
-        runEff(r(right(value)));
+        runEff(r(util.right(value)));
       }
       if (t !== null) {
         avar.value = EMPTY;
-        runEff(t(right(value)));
+        runEff(t(util.right(value)));
       }
     }
 
     if (p !== null) {
-      runEff(p.cb(right(void 0)));
+      runEff(p.cb(util.right(void 0)));
     }
 
     // Callbacks could have queued up more items so we need to guard on the
