@@ -205,7 +205,7 @@ var AVar = function () {
     }
   }
 
-  AVar.EMPTY      = EMPTY
+  AVar.EMPTY      = EMPTY;
   AVar.putLast    = putLast;
   AVar.takeLast   = takeLast;
   AVar.takeHead   = takeHead;
