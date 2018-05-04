@@ -1,197 +1,195 @@
 module Test.Main where
 
 import Prelude
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.AVar (AVAR, killVar, makeEmptyVar, makeVar, putVar, readVar, takeVar, tryPutVar, tryReadVar, tryTakeVar)
-import Control.Monad.Eff.Console (CONSOLE, log)
-import Control.Monad.Eff.Exception (error, message)
-import Control.Monad.Eff.Ref (REF, modifyRef, newRef, readRef)
+import Effect (Effect)
+import Effect.AVar as AVar
+import Effect.Console (log)
+import Effect.Exception (error, message)
+import Effect.Ref as Ref
 import Data.Either (Either(..))
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
-import Test.Assert (ASSERT, assert')
+import Test.Assert (assert')
 
-type TestEff = Eff (avar ∷ AVAR, assert ∷ ASSERT, console ∷ CONSOLE, ref ∷ REF)
-
-test ∷ String → TestEff Boolean → TestEff Unit
+test ∷ String → Effect Boolean → Effect Unit
 test s k = k >>= \r → assert' s r *> log ("[OK] " <> s)
 
-test_tryRead_full ∷ TestEff Unit
+test_tryRead_full ∷ Effect Unit
 test_tryRead_full = test "tryRead/full" do
-  var ← makeVar "foo"
-  val1 ← tryReadVar var
-  val2 ← tryReadVar var
+  var ← AVar.new "foo"
+  val1 ← AVar.tryRead var
+  val2 ← AVar.tryRead var
   pure (val1 == Just "foo" && val2 == Just "foo")
 
-test_tryRead_empty ∷ TestEff Unit
+test_tryRead_empty ∷ Effect Unit
 test_tryRead_empty = test "tryRead/empty" do
-  var ← makeEmptyVar
-  val1 ∷ Maybe Unit ← tryReadVar var
+  var ← AVar.empty
+  val1 ∷ Maybe Unit ← AVar.tryRead var
   pure (val1 == Nothing)
 
-test_tryPut_full ∷ TestEff Unit
+test_tryPut_full ∷ Effect Unit
 test_tryPut_full = test "tryPut/full" do
-  var ← makeVar "foo"
-  res ← tryPutVar "bar" var
+  var ← AVar.new "foo"
+  res ← AVar.tryPut "bar" var
   pure (not res)
 
-test_tryPut_empty ∷ TestEff Unit
+test_tryPut_empty ∷ Effect Unit
 test_tryPut_empty = test "tryPut/empty" do
-  var ← makeEmptyVar
-  res ← tryPutVar "foo" var
-  val ← tryReadVar var
+  var ← AVar.empty
+  res ← AVar.tryPut "foo" var
+  val ← AVar.tryRead var
   pure (res && val == Just "foo")
 
-test_tryTake_full ∷ TestEff Unit
+test_tryTake_full ∷ Effect Unit
 test_tryTake_full = test "tryTake/full" do
-  var ← makeVar "foo"
-  res1 ← tryTakeVar var
-  res2 ← tryTakeVar var
+  var ← AVar.new "foo"
+  res1 ← AVar.tryTake var
+  res2 ← AVar.tryTake var
   pure (res1 == Just "foo" && res2 == Nothing)
 
-test_tryTake_empty ∷ TestEff Unit
+test_tryTake_empty ∷ Effect Unit
 test_tryTake_empty = test "tryTake/empty" do
-  var  ← makeEmptyVar
-  res1 ← tryTakeVar var
-  res2 ← tryPutVar "foo" var
-  res3 ← tryTakeVar var
+  var  ← AVar.empty
+  res1 ← AVar.tryTake var
+  res2 ← AVar.tryPut "foo" var
+  res3 ← AVar.tryTake var
   pure (res1 == Nothing && res2 && res3 == Just "foo")
 
-test_put_take ∷ TestEff Unit
+test_put_take ∷ Effect Unit
 test_put_take = test "put/take" do
-  ref ← newRef ""
-  var ← makeEmptyVar
-  _ ← putVar "foo" var $ traverse_ \_ →
-    modifyRef ref (_ <> "bar")
-  _ ← takeVar var $ traverse_ \val →
-    modifyRef ref (_ <> val)
-  eq "barfoo" <$> readRef ref
+  ref ← Ref.new ""
+  var ← AVar.empty
+  _ ← AVar.put "foo" var $ traverse_ \_ →
+    Ref.modify (_ <> "bar") ref
+  _ ← AVar.take var $ traverse_ \val →
+    Ref.modify (_ <> val) ref
+  eq "barfoo" <$> Ref.read ref
 
-test_put_read_take ∷ TestEff Unit
+test_put_read_take ∷ Effect Unit
 test_put_read_take = test "put/read/take" do
-  ref ← newRef ""
-  var ← makeEmptyVar
-  _ ← putVar "foo" var $ traverse_ \_ →
-    modifyRef ref (_ <> "bar")
-  _ ← readVar var $ traverse_ \val →
-    modifyRef ref (_ <> val <> "baz")
-  _ ← takeVar var $ traverse_ \val →
-    modifyRef ref (_ <> val)
-  eq "foobazfoobar" <$> readRef ref
+  ref ← Ref.new ""
+  var ← AVar.empty
+  _ ← AVar.put "foo" var $ traverse_ \_ →
+    Ref.modify (_ <> "bar") ref
+  _ ← AVar.read var $ traverse_ \val →
+    Ref.modify (_ <> val <> "baz") ref
+  _ ← AVar.take var $ traverse_ \val →
+    Ref.modify (_ <> val) ref
+  eq "foobazfoobar" <$> Ref.read ref
 
-test_take_put ∷ TestEff Unit
+test_take_put ∷ Effect Unit
 test_take_put = test "take/put" do
-  ref ← newRef ""
-  var ← makeEmptyVar
-  _ ← takeVar var $ traverse_ \val →
-    modifyRef ref (_ <> val)
-  _ ← putVar "foo" var $ traverse_ \_ →
-    modifyRef ref (_ <> "bar")
-  eq "foobar" <$> readRef ref
+  ref ← Ref.new ""
+  var ← AVar.empty
+  _ ← AVar.take var $ traverse_ \val →
+    Ref.modify (_ <> val) ref
+  _ ← AVar.put "foo" var $ traverse_ \_ →
+    Ref.modify (_ <> "bar") ref
+  eq "foobar" <$> Ref.read ref
 
-test_take_read_put ∷ TestEff Unit
+test_take_read_put ∷ Effect Unit
 test_take_read_put = test "take/read/put" do
-  ref ← newRef ""
-  var ← makeEmptyVar
-  _ ← takeVar var $ traverse_ \val →
-    modifyRef ref (_ <> val)
-  _ ← readVar var $ traverse_ \val →
-    modifyRef ref (_ <> val <> "baz")
-  _ ← putVar "foo" var $ traverse_ \_ →
-    modifyRef ref (_ <> "bar")
-  eq "foobazfoobar" <$> readRef ref
+  ref ← Ref.new ""
+  var ← AVar.empty
+  _ ← AVar.take var $ traverse_ \val →
+    Ref.modify (_ <> val) ref
+  _ ← AVar.read var $ traverse_ \val →
+    Ref.modify (_ <> val <> "baz") ref
+  _ ← AVar.put "foo" var $ traverse_ \_ →
+    Ref.modify (_ <> "bar") ref
+  eq "foobazfoobar" <$> Ref.read ref
 
-test_read_put_take ∷ TestEff Unit
+test_read_put_take ∷ Effect Unit
 test_read_put_take = test "read/put/take" do
-  ref ← newRef ""
-  var ← makeEmptyVar
-  _ ← readVar var $ traverse_ \val →
-    modifyRef ref (_ <> val <> "baz")
-  _ ← putVar "foo" var $ traverse_ \_ →
-    modifyRef ref (_ <> "bar")
-  _ ← takeVar var $ traverse_ \val → do
-    modifyRef ref (_ <> val)
-  eq "foobazbarfoo" <$> readRef ref
+  ref ← Ref.new ""
+  var ← AVar.empty
+  _ ← AVar.read var $ traverse_ \val →
+    Ref.modify (_ <> val <> "baz") ref 
+  _ ← AVar.put "foo" var $ traverse_ \_ →
+    Ref.modify (_ <> "bar") ref
+  _ ← AVar.take var $ traverse_ \val → do
+    Ref.modify (_ <> val) ref
+  eq "foobazbarfoo" <$> Ref.read ref
 
-test_read_take_put ∷ TestEff Unit
+test_read_take_put ∷ Effect Unit
 test_read_take_put = test "read/take/put" do
-  ref ← newRef ""
-  var ← makeEmptyVar
-  _ ← readVar var $ traverse_ \val → do
-    modifyRef ref (_ <> val <> "baz")
-    void $ takeVar var $ traverse_ \val' →
-      modifyRef ref (_ <> val')
-  _ ← putVar "foo" var $ traverse_ \_ →
-    modifyRef ref (_ <> "bar")
-  eq "foobazbarfoo" <$> readRef ref
+  ref ← Ref.new ""
+  var ← AVar.empty
+  _ ← AVar.read var $ traverse_ \val → do
+    Ref.modify (_ <> val <> "baz") ref
+    void $ AVar.take var $ traverse_ \val' →
+      Ref.modify (_ <> val') ref
+  _ ← AVar.put "foo" var $ traverse_ \_ →
+    Ref.modify (_ <> "bar") ref
+  eq "foobazbarfoo" <$> Ref.read ref
 
-test_kill_full ∷ TestEff Unit
+test_kill_full ∷ Effect Unit
 test_kill_full = test "kill/full" do
-  ref ← newRef ""
-  var ← makeEmptyVar
-  _ ← putVar "foo" var $ traverse_ \_ →
-    modifyRef ref (_ <> "bar")
-  killVar (error "Die.") var
-  _ ← readVar var case _ of
-    Left err → modifyRef ref (_ <> message err)
-    Right _  → modifyRef ref (_ <> "BAD")
-  eq "barDie." <$> readRef ref
+  ref ← Ref.new ""
+  var ← AVar.empty
+  _ ← AVar.put "foo" var $ traverse_ \_ →
+    Ref.modify (_ <> "bar") ref
+  AVar.kill (error "Die.") var
+  _ ← AVar.read var case _ of
+    Left err → Ref.modify (_ <> message err) ref
+    Right _  → Ref.modify (_ <> "BAD") ref
+  eq "barDie." <$> Ref.read ref
 
-test_kill_empty ∷ TestEff Unit
+test_kill_empty ∷ Effect Unit
 test_kill_empty = test "kill/empty" do
-  ref ← newRef ""
-  var ← makeEmptyVar
-  killVar (error "Die.") var
-  _ ← readVar var case _ of
-    Left err → modifyRef ref (_ <> message err)
-    Right _  → modifyRef ref (_ <> "BAD")
-  eq "Die." <$> readRef ref
+  ref ← Ref.new ""
+  var ← AVar.empty
+  AVar.kill (error "Die.") var
+  _ ← AVar.read var case _ of
+    Left err → Ref.modify (_ <> message err) ref
+    Right _  → Ref.modify (_ <> "BAD") ref
+  eq "Die." <$> Ref.read ref
 
-test_kill_pending ∷ TestEff Unit
+test_kill_pending ∷ Effect Unit
 test_kill_pending = test "kill/pending" do
-  ref ← newRef ""
-  var ← makeEmptyVar
+  ref ← Ref.new ""
+  var ← AVar.empty
   let
     cb s = case _ of
-      Left err → modifyRef ref (_ <> s <> message err)
-      Right _  → modifyRef ref (_ <> "BAD")
-  _ ← takeVar var (cb "a")
-  _ ← takeVar var (cb "b")
-  _ ← readVar var (cb "c")
-  _ ← readVar var (cb "d")
-  killVar (error "-die.") var
-  eq "c-die.d-die.a-die.b-die." <$> readRef ref
+      Left err → Ref.modify (_ <> s <> message err) ref
+      Right _  → Ref.modify (_ <> "BAD") ref
+  _ ← AVar.take var (cb "a")
+  _ ← AVar.take var (cb "b")
+  _ ← AVar.read var (cb "c")
+  _ ← AVar.read var (cb "d")
+  AVar.kill (error "-die.") var
+  eq "c-die.d-die.a-die.b-die." <$> Ref.read ref
 
-test_cancel ∷ TestEff Unit
+test_cancel ∷ Effect Unit
 test_cancel = test "cancel" do
-  ref ← newRef ""
-  v1 ← makeVar ""
-  c1 ← putVar "a" v1 $ traverse_ \_ → modifyRef ref (_ <> "a")
-  c2 ← putVar "b" v1 $ traverse_ \_ → modifyRef ref (_ <> "b")
-  c3 ← putVar "c" v1 $ traverse_ \_ → modifyRef ref (_ <> "c")
+  ref ← Ref.new ""
+  v1 ← AVar.new ""
+  c1 ← AVar.put "a" v1 $ traverse_ \_ → Ref.modify (_ <> "a") ref
+  c2 ← AVar.put "b" v1 $ traverse_ \_ → Ref.modify (_ <> "b") ref
+  c3 ← AVar.put "c" v1 $ traverse_ \_ → Ref.modify (_ <> "c") ref
   c1
   c2
-  _  ← tryTakeVar v1
-  _  ← tryTakeVar v1
-  _  ← tryTakeVar v1
-  v2 ← makeEmptyVar
-  c4 ← takeVar v2 $ traverse_ \_ → modifyRef ref (_ <> "d")
-  c5 ← takeVar v2 $ traverse_ \_ → modifyRef ref (_ <> "e")
-  c6 ← takeVar v2 $ traverse_ \_ → modifyRef ref (_ <> "f")
+  _  ← AVar.tryTake v1
+  _  ← AVar.tryTake v1
+  _  ← AVar.tryTake v1
+  v2 ← AVar.empty
+  c4 ← AVar.take v2 $ traverse_ \_ → Ref.modify (_ <> "d") ref
+  c5 ← AVar.take v2 $ traverse_ \_ → Ref.modify (_ <> "e") ref
+  c6 ← AVar.take v2 $ traverse_ \_ → Ref.modify (_ <> "f") ref
   c5
-  _  ← tryPutVar "a" v2
-  _  ← tryPutVar "b" v2
-  _  ← tryPutVar "c" v2
-  v3 ← makeEmptyVar
-  c7 ← readVar v3 $ traverse_ \_ → modifyRef ref (_ <> "g")
-  c8 ← readVar v3 $ traverse_ \_ → modifyRef ref (_ <> "h")
-  c9 ← readVar v3 $ traverse_ \_ → modifyRef ref (_ <> "i")
+  _  ← AVar.tryPut "a" v2
+  _  ← AVar.tryPut "b" v2
+  _  ← AVar.tryPut "c" v2
+  v3 ← AVar.empty
+  c7 ← AVar.read v3 $ traverse_ \_ → Ref.modify (_ <> "g") ref
+  c8 ← AVar.read v3 $ traverse_ \_ → Ref.modify (_ <> "h") ref
+  c9 ← AVar.read v3 $ traverse_ \_ → Ref.modify (_ <> "i") ref
   c8
   c9
-  _  ← tryPutVar "a" v3
-  eq "cdfg" <$> readRef ref
+  _  ← AVar.tryPut "a" v3
+  eq "cdfg" <$> Ref.read ref
 
-main ∷ TestEff Unit
+main ∷ Effect Unit
 main = do
   test_tryRead_full
   test_tryRead_empty
