@@ -215,11 +215,11 @@ var AVar = function () {
   return AVar;
 }();
 
-exports.makeEmptyVar = function () {
+exports.empty = function () {
   return new AVar(AVar.EMPTY);
 };
 
-exports.makeVar = function (value) {
+exports._newVar = function (value) {
   return function () {
     return new AVar(value);
   };
