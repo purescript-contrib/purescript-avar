@@ -60,9 +60,9 @@ test_put_take = test "put/take" do
   ref ← Ref.new ""
   var ← AVar.empty
   _ ← AVar.put "foo" var $ traverse_ \_ →
-    Ref.modify (_ <> "bar") ref
+    void $ Ref.modify (_ <> "bar") ref
   _ ← AVar.take var $ traverse_ \val →
-    Ref.modify (_ <> val) ref
+    void $ Ref.modify (_ <> val) ref
   eq "barfoo" <$> Ref.read ref
 
 test_put_read_take ∷ Effect Unit
@@ -70,11 +70,11 @@ test_put_read_take = test "put/read/take" do
   ref ← Ref.new ""
   var ← AVar.empty
   _ ← AVar.put "foo" var $ traverse_ \_ →
-    Ref.modify (_ <> "bar") ref
+    void $ Ref.modify (_ <> "bar") ref
   _ ← AVar.read var $ traverse_ \val →
-    Ref.modify (_ <> val <> "baz") ref
+    void $ Ref.modify (_ <> val <> "baz") ref
   _ ← AVar.take var $ traverse_ \val →
-    Ref.modify (_ <> val) ref
+    void $ Ref.modify (_ <> val) ref
   eq "foobazfoobar" <$> Ref.read ref
 
 test_take_put ∷ Effect Unit
@@ -82,9 +82,9 @@ test_take_put = test "take/put" do
   ref ← Ref.new ""
   var ← AVar.empty
   _ ← AVar.take var $ traverse_ \val →
-    Ref.modify (_ <> val) ref
+    void $ Ref.modify (_ <> val) ref
   _ ← AVar.put "foo" var $ traverse_ \_ →
-    Ref.modify (_ <> "bar") ref
+    void $ Ref.modify (_ <> "bar") ref
   eq "foobar" <$> Ref.read ref
 
 test_take_read_put ∷ Effect Unit
@@ -92,11 +92,11 @@ test_take_read_put = test "take/read/put" do
   ref ← Ref.new ""
   var ← AVar.empty
   _ ← AVar.take var $ traverse_ \val →
-    Ref.modify (_ <> val) ref
+    void $ Ref.modify (_ <> val) ref
   _ ← AVar.read var $ traverse_ \val →
-    Ref.modify (_ <> val <> "baz") ref
+    void $ Ref.modify (_ <> val <> "baz") ref
   _ ← AVar.put "foo" var $ traverse_ \_ →
-    Ref.modify (_ <> "bar") ref
+    void $ Ref.modify (_ <> "bar") ref
   eq "foobazfoobar" <$> Ref.read ref
 
 test_read_put_take ∷ Effect Unit
@@ -104,11 +104,11 @@ test_read_put_take = test "read/put/take" do
   ref ← Ref.new ""
   var ← AVar.empty
   _ ← AVar.read var $ traverse_ \val →
-    Ref.modify (_ <> val <> "baz") ref 
+    void $ Ref.modify (_ <> val <> "baz") ref
   _ ← AVar.put "foo" var $ traverse_ \_ →
-    Ref.modify (_ <> "bar") ref
+    void $ Ref.modify (_ <> "bar") ref
   _ ← AVar.take var $ traverse_ \val → do
-    Ref.modify (_ <> val) ref
+    void $ Ref.modify (_ <> val) ref
   eq "foobazbarfoo" <$> Ref.read ref
 
 test_read_take_put ∷ Effect Unit
@@ -116,11 +116,11 @@ test_read_take_put = test "read/take/put" do
   ref ← Ref.new ""
   var ← AVar.empty
   _ ← AVar.read var $ traverse_ \val → do
-    Ref.modify (_ <> val <> "baz") ref
+    void $ Ref.modify (_ <> val <> "baz") ref
     void $ AVar.take var $ traverse_ \val' →
-      Ref.modify (_ <> val') ref
+      void $ Ref.modify (_ <> val') ref
   _ ← AVar.put "foo" var $ traverse_ \_ →
-    Ref.modify (_ <> "bar") ref
+    void $ Ref.modify (_ <> "bar") ref
   eq "foobazbarfoo" <$> Ref.read ref
 
 test_kill_full ∷ Effect Unit
@@ -128,11 +128,11 @@ test_kill_full = test "kill/full" do
   ref ← Ref.new ""
   var ← AVar.empty
   _ ← AVar.put "foo" var $ traverse_ \_ →
-    Ref.modify (_ <> "bar") ref
+    void $ Ref.modify (_ <> "bar") ref
   AVar.kill (error "Die.") var
   _ ← AVar.read var case _ of
-    Left err → Ref.modify (_ <> message err) ref
-    Right _  → Ref.modify (_ <> "BAD") ref
+    Left err → void $ Ref.modify (_ <> message err) ref
+    Right _  → void $ Ref.modify (_ <> "BAD") ref
   eq "barDie." <$> Ref.read ref
 
 test_kill_empty ∷ Effect Unit
@@ -141,8 +141,8 @@ test_kill_empty = test "kill/empty" do
   var ← AVar.empty
   AVar.kill (error "Die.") var
   _ ← AVar.read var case _ of
-    Left err → Ref.modify (_ <> message err) ref
-    Right _  → Ref.modify (_ <> "BAD") ref
+    Left err → void $ Ref.modify (_ <> message err) ref
+    Right _  → void $ Ref.modify (_ <> "BAD") ref
   eq "Die." <$> Ref.read ref
 
 test_kill_pending ∷ Effect Unit
@@ -151,8 +151,8 @@ test_kill_pending = test "kill/pending" do
   var ← AVar.empty
   let
     cb s = case _ of
-      Left err → Ref.modify (_ <> s <> message err) ref
-      Right _  → Ref.modify (_ <> "BAD") ref
+      Left err → void $ Ref.modify (_ <> s <> message err) ref
+      Right _  → void $ Ref.modify (_ <> "BAD") ref
   _ ← AVar.take var (cb "a")
   _ ← AVar.take var (cb "b")
   _ ← AVar.read var (cb "c")
@@ -164,26 +164,26 @@ test_cancel ∷ Effect Unit
 test_cancel = test "cancel" do
   ref ← Ref.new ""
   v1 ← AVar.new ""
-  c1 ← AVar.put "a" v1 $ traverse_ \_ → Ref.modify (_ <> "a") ref
-  c2 ← AVar.put "b" v1 $ traverse_ \_ → Ref.modify (_ <> "b") ref
-  c3 ← AVar.put "c" v1 $ traverse_ \_ → Ref.modify (_ <> "c") ref
+  c1 ← AVar.put "a" v1 $ traverse_ \_ → void $ Ref.modify (_ <> "a") ref
+  c2 ← AVar.put "b" v1 $ traverse_ \_ → void $ Ref.modify (_ <> "b") ref
+  c3 ← AVar.put "c" v1 $ traverse_ \_ → void $ Ref.modify (_ <> "c") ref
   c1
   c2
   _  ← AVar.tryTake v1
   _  ← AVar.tryTake v1
   _  ← AVar.tryTake v1
   v2 ← AVar.empty
-  c4 ← AVar.take v2 $ traverse_ \_ → Ref.modify (_ <> "d") ref
-  c5 ← AVar.take v2 $ traverse_ \_ → Ref.modify (_ <> "e") ref
-  c6 ← AVar.take v2 $ traverse_ \_ → Ref.modify (_ <> "f") ref
+  c4 ← AVar.take v2 $ traverse_ \_ → void $ Ref.modify (_ <> "d") ref
+  c5 ← AVar.take v2 $ traverse_ \_ → void $ Ref.modify (_ <> "e") ref
+  c6 ← AVar.take v2 $ traverse_ \_ → void $ Ref.modify (_ <> "f") ref
   c5
   _  ← AVar.tryPut "a" v2
   _  ← AVar.tryPut "b" v2
   _  ← AVar.tryPut "c" v2
   v3 ← AVar.empty
-  c7 ← AVar.read v3 $ traverse_ \_ → Ref.modify (_ <> "g") ref
-  c8 ← AVar.read v3 $ traverse_ \_ → Ref.modify (_ <> "h") ref
-  c9 ← AVar.read v3 $ traverse_ \_ → Ref.modify (_ <> "i") ref
+  c7 ← AVar.read v3 $ traverse_ \_ → void $ Ref.modify (_ <> "g") ref
+  c8 ← AVar.read v3 $ traverse_ \_ → void $ Ref.modify (_ <> "h") ref
+  c9 ← AVar.read v3 $ traverse_ \_ → void $ Ref.modify (_ <> "i") ref
   c8
   c9
   _  ← AVar.tryPut "a" v3
