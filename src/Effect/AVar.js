@@ -1,9 +1,8 @@
 /* globals exports, setTimeout */
-/* jshint -W097 */
-
 "use strict";
 
 var AVar = function () {
+
   function MutableQueue () {
     this.head = null;
     this.last = null;
@@ -27,6 +26,16 @@ var AVar = function () {
   }
 
   var EMPTY = {};
+
+  function runEff(eff) {
+    try {
+      eff();
+    } catch (error) {
+      setTimeout(function () {
+        throw error;
+      }, 0);
+    }
+  }
 
   function putLast (queue, value) {
     var cell = new MutableCell(queue, value);
@@ -136,8 +145,7 @@ var AVar = function () {
 
     avar.draining = true;
 
-    /* jshint -W084 */
-    while (1) {
+    while (1) { // eslint-disable-line no-constant-condition
       p = null;
       r = null;
       t = null;
@@ -146,13 +154,13 @@ var AVar = function () {
 
       if (avar.error !== null) {
         value = util.left(avar.error);
-        while (p = takeHead(ps)) {
+        while (p = takeHead(ps)) { // eslint-disable-line no-cond-assign
           runEff(p.cb(value));
         }
-        while (r = takeHead(rs)) {
+        while (r = takeHead(rs)) { // eslint-disable-line no-cond-assign
           runEff(r(value));
         }
-        while (t = takeHead(ts)) {
+        while (t = takeHead(ts)) { // eslint-disable-line no-cond-assign
           runEff(t(value));
         }
         break;
@@ -190,19 +198,7 @@ var AVar = function () {
         break;
       }
     }
-    /* jshint +W084 */
-
     avar.draining = false;
-  }
-
-  function runEff(eff) {
-    try {
-      eff();
-    } catch (error) {
-      setTimeout(function () {
-        throw error;
-      }, 0);
-    }
   }
 
   AVar.EMPTY      = EMPTY;
@@ -215,11 +211,11 @@ var AVar = function () {
   return AVar;
 }();
 
-exports.makeEmptyVar = function () {
+exports.empty = function () {
   return new AVar(AVar.EMPTY);
 };
 
-exports.makeVar = function (value) {
+exports._newVar = function (value) {
   return function () {
     return new AVar(value);
   };
