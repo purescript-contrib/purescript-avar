@@ -75,7 +75,7 @@ test_put_read_take = test "put/read/take" do
     void $ Ref.modify (_ <> val <> "baz") ref
   _ ← AVar.take var $ traverse_ \val →
     void $ Ref.modify (_ <> val) ref
-  eq "foobazfoobar" <$> Ref.read ref
+  eq "barfoobazfoo" <$> Ref.read ref
 
 test_take_put ∷ Effect Unit
 test_take_put = test "take/put" do
@@ -198,6 +198,7 @@ main = do
   test_tryTake_full
   test_tryTake_empty
   test_put_take
+  test_put_read_take
   test_take_put
   test_take_read_put
   test_read_put_take
