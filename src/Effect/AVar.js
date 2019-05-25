@@ -221,6 +221,7 @@ var AVar = function () {
 
   AVar.EMPTY      = EMPTY;
   AVar.putLast    = putLast;
+  AVar.putHead    = putHead;
   AVar.takeLast   = takeLast;
   AVar.takeHead   = takeHead;
   AVar.deleteCell = deleteCell;
