@@ -4,7 +4,7 @@ import Prelude
 import Effect (Effect)
 import Effect.AVar as AVar
 import Effect.Console (log)
-import Effect.Exception (error, message)
+import Effect.Exception (Error, error, message)
 import Effect.Ref as Ref
 import Data.Either (Either(..))
 import Data.Foldable (traverse_)
@@ -189,6 +189,126 @@ test_cancel = test "cancel" do
   _  ← AVar.tryPut "a" v3
   eq "cdfg" <$> Ref.read ref
 
+putMax
+  :: ∀ a
+   . Int
+  -> Error
+  -> a
+  -> AVar.AVar a
+  -> AVar.AVarCallback Unit
+  -> Effect (Effect Unit)
+putMax max err = AVar.windowPut go
+  where
+  go n
+    | n < max = AVar.PushTail
+    | otherwise = AVar.Fail err
+
+test_max1_put_take ∷ Effect Unit
+test_max1_put_take = test "max1: put/take" do
+  ref ← Ref.new ""
+  var ← AVar.empty
+  let
+    err =
+      error "max puts exceeded"
+  _ ← putMax 1 err "foo" var $ traverse_ \_ →
+    void $ Ref.modify (_ <> "bar") ref
+  _ ← AVar.take var $ traverse_ \val →
+    void $ Ref.modify (_ <> val) ref
+  eq "barfoo" <$> Ref.read ref
+
+test_max2_put_take ∷ Effect Unit
+test_max2_put_take = test "max2: put/take" do
+  ref ← Ref.new ""
+  var ← AVar.empty
+  let
+    err =
+      error "max puts exceeded"
+  _ ← putMax 2 err "foo" var $ traverse_ \_ →
+    void $ Ref.modify (_ <> "bar") ref
+  _ ← AVar.take var $ traverse_ \val →
+    void $ Ref.modify (_ <> val) ref
+  eq "barfoo" <$> Ref.read ref
+
+test_max1_put_put_put_take ∷ Effect Unit
+test_max1_put_put_put_take = test "max1: put/put/put/take" do
+  ref ← Ref.new ""
+  var ← AVar.empty
+  let
+    err =
+      error "max puts exceeded"
+  _ ← putMax 1 err "foo" var $ traverse_ \_ →
+    void $ Ref.modify (_ <> "bar") ref
+  _ ← putMax 1 err "foo" var $ traverse_ \_ →
+    void $ Ref.modify (_ <> "bar") ref
+  _ ← putMax 1 err "foo" var $
+    case _ of
+      Left _ -> void $ Ref.modify (_ <> "fail") ref
+      otherwise -> void $ Ref.modify (_ <> "bar") ref
+  _ ← AVar.take var $ traverse_ \val →
+    void $ Ref.modify (_ <> val) ref
+  eq "barfailfoobar" <$> Ref.read ref
+
+putSliding
+  :: ∀ a
+   . Int
+  -> Error
+  -> a
+  -> AVar.AVar a
+  -> AVar.AVarCallback Unit
+  -> Effect (Effect Unit)
+putSliding max err = AVar.windowPut go
+  where
+  go n
+    | n < max = AVar.PushTail
+    | otherwise = AVar.DropHead err
+
+test_window1_put_take ∷ Effect Unit
+test_window1_put_take = test "win1: put/take" do
+  ref ← Ref.new ""
+  var ← AVar.empty
+  let
+    err =
+      error "sliding window exceeded"
+  _ ← putSliding 1 err "foo" var $ traverse_ \_ →
+    void $ Ref.modify (_ <> "bar") ref
+  _ ← AVar.take var $ traverse_ \val →
+    void $ Ref.modify (_ <> val) ref
+  eq "barfoo" <$> Ref.read ref
+
+test_window2_put_take ∷ Effect Unit
+test_window2_put_take = test "win2: put/take" do
+  ref ← Ref.new ""
+  var ← AVar.empty
+  let
+    err =
+      error "sliding window exceeded"
+  _ ← putSliding 2 err "foo" var $ traverse_ \_ →
+    void $ Ref.modify (_ <> "bar") ref
+  _ ← AVar.take var $ traverse_ \val →
+    void $ Ref.modify (_ <> val) ref
+  eq "barfoo" <$> Ref.read ref
+
+test_window1_put_put_put_take_take ∷ Effect Unit
+test_window1_put_put_put_take_take = test "win1: put/put/put/take/take" do
+  ref ← Ref.new ""
+  var ← AVar.empty
+  let
+    err =
+      error "sliding window exceeded"
+  _ ← putSliding 1 err "foo1" var $ traverse_ \_ →
+    void $ Ref.modify (_ <> "bar1") ref
+  _ ← putSliding 1 err "foo2" var $
+    case _ of
+      Left _ -> void $ Ref.modify (_ <> "fail") ref
+      otherwise -> void $ Ref.modify (_ <> "bar2") ref
+  _ ← putSliding 1 err "foo3" var $ traverse_ \_ →
+    void $ Ref.modify (_ <> "bar3") ref
+  _ ← AVar.take var $ traverse_ \val →
+    void $ Ref.modify (_ <> val) ref
+  _ ← AVar.take var $ traverse_ \val →
+    void $ Ref.modify (_ <> val) ref
+  eq "bar1failfoo1bar3foo3" <$> Ref.read ref
+
 main ∷ Effect Unit
 main = do
   test_tryRead_full
@@ -206,3 +326,9 @@ main = do
   test_kill_empty
   test_kill_pending
   test_cancel
+  test_max1_put_take
+  test_max2_put_take
+  test_max1_put_put_put_take
+  test_window1_put_take
+  test_window2_put_take
+  test_window1_put_put_put_take_take
