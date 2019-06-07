@@ -254,24 +254,22 @@ exports._killVar = function (util, error, avar) {
   };
 };
 
-exports._initPuts = function (util, error, avar) {
+exports._initPuts = function (util, avar) {
   return function () {
     var p = AVar.takeLast(avar.puts);
     if (p !== null) {
-      p.cb(util.left(error))();
-      return util.just(p.value);
+      return util.just(p);
     } else {
       return util.nothing;
     }
   };
 };
 
-exports._tailPuts = function (util, error, avar) {
+exports._tailPuts = function (util, avar) {
   return function () {
     var p = AVar.takeHead(avar.puts);
     if (p !== null) {
-      p.cb(util.left(error))();
-      return util.just(p.value);
+      return util.just(p);
     } else {
       return util.nothing;
     }

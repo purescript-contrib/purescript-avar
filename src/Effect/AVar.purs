@@ -21,6 +21,7 @@ module Effect.AVar
 
 import Prelude
 import Data.Either (Either(..))
+import Data.Foldable (traverse_)
 import Data.Function.Uncurried as Fn
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
@@ -94,20 +95,28 @@ windowPut strategy value avar cb =
     PushTail -> Fn.runFn4 _snocVar ffiUtil value avar cb
     -- Drop the head, and push onto the tail
     DropHead e -> do
-      void $ Fn.runFn3 _tailPuts ffiUtil e avar
-      Fn.runFn4 _snocVar ffiUtil value avar cb
+      mPut <- Fn.runFn2 _tailPuts ffiUtil avar
+      canceller <- Fn.runFn4 _snocVar ffiUtil value avar cb
+      canceller <$ do
+        traverse_ <@> mPut $ \{cb: cb'} -> cb' (Left e)
     -- Drop the tail, and push onto the head
     DropTail e -> do
-      void $ Fn.runFn3 _initPuts ffiUtil e avar
-      Fn.runFn4 _consVar ffiUtil value avar cb
+      mPut <- Fn.runFn2 _initPuts ffiUtil avar
+      canceller <- Fn.runFn4 _consVar ffiUtil value avar cb
+      canceller <$ do
+        traverse_ <@> mPut $ \{cb: cb'} -> cb' (Left e)
     -- Replace the head
     SwapHead e -> do
-      void $ Fn.runFn3 _tailPuts ffiUtil e avar
-      Fn.runFn4 _consVar ffiUtil value avar cb
+      mPut <- Fn.runFn2 _tailPuts ffiUtil avar
+      canceller <- Fn.runFn4 _consVar ffiUtil value avar cb
+      canceller <$ do
+        traverse_ <@> mPut $ \{cb: cb'} -> cb' (Left e)
     -- Replace the tail
     SwapTail e -> do
-      void $ Fn.runFn3 _initPuts ffiUtil e avar
-      Fn.runFn4 _snocVar ffiUtil value avar cb
+      mPut <- Fn.runFn2 _initPuts ffiUtil avar
+      canceller <- Fn.runFn4 _snocVar ffiUtil value avar cb
+      canceller <$ do
+        traverse_ <@> mPut $ \{cb: cb'} -> cb' (Left e)
 
 -- | Attempts to synchronously fill an AVar. If the AVar is already filled,
 -- | this will do nothing. Returns true or false depending on if it succeeded.
@@ -160,8 +169,8 @@ foreign import _newVar ∷ ∀ a. a → Effect (AVar a)
 foreign import _killVar ∷ ∀ a. Fn.Fn3 FFIUtil Error (AVar a) (Effect Unit)
 foreign import _snocVar ∷ ∀ a. Fn.Fn4 FFIUtil a (AVar a) (AVarCallback Unit) (Effect (Effect Unit))
 foreign import _consVar ∷ ∀ a. Fn.Fn4 FFIUtil a (AVar a) (AVarCallback Unit) (Effect (Effect Unit))
-foreign import _initPuts ∷ ∀ a. Fn.Fn3 FFIUtil Error (AVar a) (Effect (Maybe a))
-foreign import _tailPuts ∷ ∀ a. Fn.Fn3 FFIUtil Error (AVar a) (Effect (Maybe a))
+foreign import _initPuts ∷ ∀ a. Fn.Fn2 FFIUtil (AVar a) (Effect (Maybe {cb :: AVarCallback a, value :: a}))
+foreign import _tailPuts ∷ ∀ a. Fn.Fn2 FFIUtil (AVar a) (Effect (Maybe {cb :: AVarCallback a, value :: a}))
 foreign import _tryPutVar ∷ ∀ a. Fn.Fn3 FFIUtil a (AVar a) (Effect Boolean)
 foreign import _takeVar ∷ ∀ a. Fn.Fn3 FFIUtil (AVar a) (AVarCallback a) (Effect (Effect Unit))
 foreign import _tryTakeVar ∷ ∀ a. Fn.Fn2 FFIUtil (AVar a) (Effect (Maybe a))
