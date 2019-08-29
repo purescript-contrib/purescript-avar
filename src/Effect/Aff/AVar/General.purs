@@ -42,7 +42,7 @@ take avar = makeAff \k → do
 
 -- | Attempts to synchronously take an AVar value, leaving it empty. If the
 -- | AVar is empty, this will return `Nothing`.
-tryTake ∷ ∀ e a. AVar e a → Aff e (Maybe a)
+tryTake ∷ ∀ e1 e2 a. AVar e1 a → Aff e2 (Maybe a)
 tryTake = liftEffect <<< AVar.tryTake
 
 -- | Sets the value of the AVar. If the AVar is already filled, it will be
@@ -55,7 +55,7 @@ put value avar = makeAff \k → do
 
 -- | Attempts to synchronously fill an AVar. If the AVar is already filled,
 -- | this will do nothing. Returns true or false depending on if it succeeded.
-tryPut ∷ ∀ e a. a → AVar e a → Aff e Boolean
+tryPut ∷ ∀ e1 e2 a. a → AVar e1 a → Aff e2 Boolean
 tryPut value = liftEffect <<< AVar.tryPut value
 
 -- | Reads the AVar value. Unlike `take`, this will not leave the AVar empty.
@@ -68,10 +68,10 @@ read avar = makeAff \k → do
 
 -- | Attempts to synchronously read an AVar. If the AVar is empty, this will
 -- | return `Nothing`.
-tryRead ∷ ∀ e a. AVar e a → Aff e (Maybe a)
+tryRead ∷ ∀ e1 e2 a. AVar e1 a → Aff e2 (Maybe a)
 tryRead = liftEffect <<< AVar.tryRead
 
 -- | Kills the AVar with an exception. All pending and future actions will
 -- | resolve immediately with the provided exception.
-kill ∷ ∀ e a. e → AVar e a → Aff e Unit
+kill ∷ ∀ e1 e2 a. e1 → AVar e1 a → Aff e2 Unit
 kill error = liftEffect <<< AVar.kill error
