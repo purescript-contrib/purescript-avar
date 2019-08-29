@@ -21,15 +21,15 @@ import Effect.Class (liftEffect)
 import Prelude (Unit, bind, pure, (<<<))
 
 -- | Creates a fresh AVar with an initial value.
-new ∷ ∀ e a. a → Aff e (AVar e a)
+new ∷ ∀ e1 e2 a. a → Aff e1 (AVar e2 a)
 new = liftEffect <<< AVar.new
 
 -- | Creates a fresh AVar.
-empty ∷ ∀ e a. Aff e (AVar e a)
+empty ∷ ∀ e1 e2 a. Aff e1 (AVar e2 a)
 empty = liftEffect AVar.empty
 
 -- | Synchronously checks the status of an AVar.
-status ∷ ∀ e a. AVar e a → Aff e (AVarStatus e a)
+status ∷ ∀ e1 e2 a. AVar e1 a → Aff e2 (AVarStatus e1 a)
 status = liftEffect <<< AVar.status
 
 -- | Takes the AVar value, leaving it empty. If the AVar is already empty,
