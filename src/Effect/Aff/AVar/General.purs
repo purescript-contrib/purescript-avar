@@ -12,11 +12,12 @@ module Effect.Aff.AVar.General
   , kill
   ) where
 
+import Data.Either (either)
 import Data.Maybe (Maybe)
+import Effect.AVar.General (AVar, AVarStatus(..), AVarCallback) as Exports
 import Effect.AVar.General (AVar, AVarStatus)
 import Effect.AVar.General as AVar
-import Effect.AVar.General (AVar, AVarStatus(..), AVarCallback) as Exports
-import Effect.Aff.General (Aff, makeAff, effectCanceler)
+import Effect.Aff.General (Aff, AffResult(..), effectCanceler, makeAff)
 import Effect.Class (liftEffect)
 import Prelude (Unit, bind, pure, (<<<))
 
@@ -37,7 +38,7 @@ status = liftEffect <<< AVar.status
 -- | resolve in order as the AVar fills.
 take ∷ ∀ e a. AVar e a → Aff e a
 take avar = makeAff \k → do
-  c ← AVar.take avar k
+  c ← AVar.take avar (k <<< either Failed Succeeded)
   pure (effectCanceler c)
 
 -- | Attempts to synchronously take an AVar value, leaving it empty. If the
@@ -50,7 +51,7 @@ tryTake = liftEffect <<< AVar.tryTake
 -- | the AVar becomes available.
 put ∷ ∀ e a. a → AVar e a → Aff e Unit
 put value avar = makeAff \k → do
-  c ← AVar.put value avar k
+  c ← AVar.put value avar (k <<< either Failed Succeeded)
   pure (effectCanceler c)
 
 -- | Attempts to synchronously fill an AVar. If the AVar is already filled,
@@ -63,7 +64,7 @@ tryPut value = liftEffect <<< AVar.tryPut value
 -- | will resolve at the same time, as soon as possible.
 read ∷ ∀ e a. AVar e a → Aff e a
 read avar = makeAff \k → do
-  c ← AVar.read avar k
+  c ← AVar.read avar (k <<< either Failed Succeeded)
   pure (effectCanceler c)
 
 -- | Attempts to synchronously read an AVar. If the AVar is empty, this will
