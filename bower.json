@@ -23,7 +23,7 @@
     "tests"
   ],
   "dependencies": {
-    "purescript-aff": "^5.0.0",
+    "purescript-aff": "git@github.com:eric-corumdigital/purescript-aff.git#general_errors",
     "purescript-effect": "^2.0.0",
     "purescript-maybe": "^4.0.0",
     "purescript-either": "^4.0.0",
