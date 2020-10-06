@@ -1,4 +1,3 @@
-/* globals exports, setTimeout */
 "use strict";
 
 var AVar = function () {
@@ -40,18 +39,18 @@ var AVar = function () {
   function putLast (queue, value) {
     var cell = new MutableCell(queue, value);
     switch (queue.size) {
-    case 0:
-      queue.head = cell;
-      break;
-    case 1:
-      cell.prev = queue.head;
-      queue.head.next = cell;
-      queue.last = cell;
-      break;
-    default:
-      cell.prev = queue.last;
-      queue.last.next = cell;
-      queue.last = cell;
+      case 0:
+        queue.head = cell;
+        break;
+      case 1:
+        cell.prev = queue.head;
+        queue.head.next = cell;
+        queue.last = cell;
+        break;
+      default:
+        cell.prev = queue.last;
+        queue.last.next = cell;
+        queue.last = cell;
     }
     queue.size++;
     return cell;
@@ -60,21 +59,21 @@ var AVar = function () {
   function takeLast (queue) {
     var cell;
     switch (queue.size) {
-    case 0:
-      return null;
-    case 1:
-      cell = queue.head;
-      queue.head = null;
-      break;
-    case 2:
-      cell = queue.last;
-      queue.head.next = null;
-      queue.last = null;
-      break;
-    default:
-      cell = queue.last;
-      queue.last = cell.prev;
-      queue.last.next = null;
+      case 0:
+        return null;
+      case 1:
+        cell = queue.head;
+        queue.head = null;
+        break;
+      case 2:
+        cell = queue.last;
+        queue.head.next = null;
+        queue.last = null;
+        break;
+      default:
+        cell = queue.last;
+        queue.last = cell.prev;
+        queue.last.next = null;
     }
     cell.prev = null;
     cell.queue = null;
@@ -85,22 +84,22 @@ var AVar = function () {
   function takeHead (queue) {
     var cell;
     switch (queue.size) {
-    case 0:
-      return null;
-    case 1:
-      cell = queue.head;
-      queue.head = null;
-      break;
-    case 2:
-      cell = queue.head;
-      queue.last.prev = null;
-      queue.head = queue.last;
-      queue.last = null;
-      break;
-    default:
-      cell = queue.head;
-      queue.head = cell.next;
-      queue.head.prev = null;
+      case 0:
+        return null;
+      case 1:
+        cell = queue.head;
+        queue.head = null;
+        break;
+      case 2:
+        cell = queue.head;
+        queue.last.prev = null;
+        queue.head = queue.last;
+        queue.last = null;
+        break;
+      default:
+        cell = queue.head;
+        queue.head = cell.next;
+        queue.head.prev = null;
     }
     cell.next = null;
     cell.queue = null;
