@@ -28,6 +28,8 @@ type AVarCallback a = (Either Error a → Effect Unit)
 
 foreign import data AVar ∷ Type → Type
 
+type role AVar representational
+
 data AVarStatus a
   = Killed Error
   | Filled a
