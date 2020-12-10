@@ -7,7 +7,7 @@
   "description": "Low-level interface for asynchronous variables",
   "repository": {
     "type": "git",
-    "url": "git://github.com/slamdata/purescript-avar.git"
+    "url": "https://github.com/purescript-contrib/purescript-avar.git"
   },
   "main": "",
   "keywords": [
@@ -23,17 +23,17 @@
     "tests"
   ],
   "dependencies": {
-    "purescript-aff": "^5.0.0",
-    "purescript-effect": "^2.0.0",
-    "purescript-maybe": "^4.0.0",
-    "purescript-either": "^4.0.0",
-    "purescript-functions": "^4.0.0",
-    "purescript-exceptions": "^4.0.0"
+    "purescript-aff": "main",
+    "purescript-effect": "master",
+    "purescript-maybe": "master",
+    "purescript-either": "master",
+    "purescript-functions": "master",
+    "purescript-exceptions": "master"
   },
   "devDependencies": {
-    "purescript-assert": "^4.0.0",
-    "purescript-console": "^4.1.0",
-    "purescript-transformers": "^4.0.0",
-    "purescript-refs": "^4.0.0"
+    "purescript-assert": "master",
+    "purescript-console": "master",
+    "purescript-transformers": "master",
+    "purescript-refs": "master"
   }
 }
