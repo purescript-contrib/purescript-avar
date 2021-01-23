@@ -5,12 +5,17 @@ Notable changes to this project are documented in this file. The format is based
 ## [Unreleased]
 
 Breaking changes (😱!!!):
+- Added support for PureScript 0.14 and dropped support for all previous versions (#23)
 
 New features:
+- Added roles declarations to allow safe coercions (#20)
 
 Bugfixes:
 
 Other improvements:
+- Re-enable `test_put_read_take` in the test-suite (#16)
+- Changed default branch to `main` from `master`
+- Updated to comply with Contributors library guidelines by adding new issue and pull request templates, updating documentation, and migrating to Spago for local development and CI (#21)
 
 ## [v3.0.0](https://github.com/purescript-contrib/purescript-avar/releases/tag/v3.0.0) - 2018-05-25
 
@@ -18,7 +23,7 @@ Other improvements:
 
 ## [v2.0.1](https://github.com/purescript-contrib/purescript-avar/releases/tag/v2.0.1) - 2017-09-20
 
-- Fixes issue with `purs bundle` aggressively eliminating core functionality.
+- Fixed issue with `purs bundle` aggressively eliminating core functionality.
 
 ## [v2.0.0](https://github.com/purescript-contrib/purescript-avar/releases/tag/v2.0.0) - 2017-08-31
 
@@ -28,4 +33,3 @@ Other improvements:
 ## [v1.0.0](https://github.com/purescript-contrib/purescript-avar/releases/tag/v1.0.0) - 2017-07-18
 
 - Initial release
-
