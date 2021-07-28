@@ -166,22 +166,22 @@ test_cancel = test "cancel" do
   v1 ← AVar.new ""
   c1 ← AVar.put "a" v1 $ traverse_ \_ → void $ Ref.modify (_ <> "a") ref
   c2 ← AVar.put "b" v1 $ traverse_ \_ → void $ Ref.modify (_ <> "b") ref
-  c3 ← AVar.put "c" v1 $ traverse_ \_ → void $ Ref.modify (_ <> "c") ref
+  _ ← AVar.put "c" v1 $ traverse_ \_ → void $ Ref.modify (_ <> "c") ref
   c1
   c2
   _  ← AVar.tryTake v1
   _  ← AVar.tryTake v1
   _  ← AVar.tryTake v1
   v2 ← AVar.empty
-  c4 ← AVar.take v2 $ traverse_ \_ → void $ Ref.modify (_ <> "d") ref
+  _ ← AVar.take v2 $ traverse_ \_ → void $ Ref.modify (_ <> "d") ref
   c5 ← AVar.take v2 $ traverse_ \_ → void $ Ref.modify (_ <> "e") ref
-  c6 ← AVar.take v2 $ traverse_ \_ → void $ Ref.modify (_ <> "f") ref
+  _ ← AVar.take v2 $ traverse_ \_ → void $ Ref.modify (_ <> "f") ref
   c5
   _  ← AVar.tryPut "a" v2
   _  ← AVar.tryPut "b" v2
   _  ← AVar.tryPut "c" v2
   v3 ← AVar.empty
-  c7 ← AVar.read v3 $ traverse_ \_ → void $ Ref.modify (_ <> "g") ref
+  _ ← AVar.read v3 $ traverse_ \_ → void $ Ref.modify (_ <> "g") ref
   c8 ← AVar.read v3 $ traverse_ \_ → void $ Ref.modify (_ <> "h") ref
   c9 ← AVar.read v3 $ traverse_ \_ → void $ Ref.modify (_ <> "i") ref
   c8
