@@ -6,11 +6,12 @@
   , "effect"
   , "either"
   , "exceptions"
+  , "foldable-traversable"
   , "functions"
   , "maybe"
+  , "prelude"
   , "psci-support"
   , "refs"
-  , "transformers"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
