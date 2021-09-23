@@ -56,6 +56,24 @@ var AVar = function () {
     return cell;
   }
 
+  function putHead (queue, value) {
+    var cell = new MutableCell(queue, value);
+    switch (queue.size) {
+    case 0:
+      queue.head = cell;
+      break;
+    case 1:
+      queue.last = queue.head;
+      /* fallthrough */
+    default:
+      cell.next = queue.head;
+      queue.head.prev = cell;
+      queue.head = cell;
+    }
+    queue.size++;
+    return cell;
+  }
+
   function takeLast (queue) {
     var cell;
     switch (queue.size) {
@@ -202,6 +220,7 @@ var AVar = function () {
 
   AVar.EMPTY      = EMPTY;
   AVar.putLast    = putLast;
+  AVar.putHead    = putHead;
   AVar.takeLast   = takeLast;
   AVar.takeHead   = takeHead;
   AVar.deleteCell = deleteCell;
@@ -220,6 +239,10 @@ exports._newVar = function (value) {
   };
 };
 
+exports._pendingPuts = function (avar) {
+  return avar.puts.size;
+};
+
 exports._killVar = function (util, error, avar) {
   return function () {
     if (avar.error === null) {
@@ -230,9 +253,41 @@ exports._killVar = function (util, error, avar) {
   };
 };
 
-exports._putVar = function (util, value, avar, cb) {
+exports._initPuts = function (util, avar) {
+  return function () {
+    var p = AVar.takeLast(avar.puts);
+    if (p !== null) {
+      return util.just(p);
+    } else {
+      return util.nothing;
+    }
+  };
+};
+
+exports._tailPuts = function (util, avar) {
+  return function () {
+    var p = AVar.takeHead(avar.puts);
+    if (p !== null) {
+      return util.just(p);
+    } else {
+      return util.nothing;
+    }
+  };
+};
+
+exports._snocVar = function (util, value, avar, cb) {
   return function () {
     var cell = AVar.putLast(avar.puts, { cb: cb, value: value });
+    AVar.drainVar(util, avar);
+    return function () {
+      AVar.deleteCell(cell);
+    };
+  };
+};
+
+exports._consVar = function (util, value, avar, cb) {
+  return function () {
+    var cell = AVar.putHead(avar.puts, { cb: cb, value: value });
     AVar.drainVar(util, avar);
     return function () {
       AVar.deleteCell(cell);
