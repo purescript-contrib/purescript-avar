@@ -21,57 +21,57 @@ import Effect.Class (liftEffect)
 import Effect.Exception (Error)
 
 -- | Creates a fresh AVar with an initial value.
-new ∷ ∀ a. a → Aff (AVar a)
+new :: forall a. a -> Aff (AVar a)
 new = liftEffect <<< AVar.new
 
 -- | Creates a fresh AVar.
-empty ∷ ∀ a. Aff (AVar a)
+empty :: forall a. Aff (AVar a)
 empty = liftEffect AVar.empty
 
 -- | Synchronously checks the status of an AVar.
-status ∷ ∀ a. AVar a → Aff (AVar.AVarStatus a)
+status :: forall a. AVar a -> Aff (AVar.AVarStatus a)
 status = liftEffect <<< AVar.status
 
 -- | Takes the AVar value, leaving it empty. If the AVar is already empty,
 -- | the callback will be queued until the AVar is filled. Multiple takes will
 -- | resolve in order as the AVar fills.
-take ∷ ∀ a. AVar a → Aff a
-take avar = makeAff \k → do
-  c ← AVar.take avar k
+take :: forall a. AVar a -> Aff a
+take avar = makeAff \k -> do
+  c <- AVar.take avar k
   pure (effectCanceler c)
 
 -- | Attempts to synchronously take an AVar value, leaving it empty. If the
 -- | AVar is empty, this will return `Nothing`.
-tryTake ∷ ∀ a. AVar a → Aff (Maybe a)
+tryTake :: forall a. AVar a -> Aff (Maybe a)
 tryTake = liftEffect <<< AVar.tryTake
 
 -- | Sets the value of the AVar. If the AVar is already filled, it will be
 -- | queued until the value is emptied. Multiple puts will resolve in order as
 -- | the AVar becomes available.
-put ∷ ∀ a. a → AVar a → Aff Unit
-put value avar = makeAff \k → do
-  c ← AVar.put value avar k
+put :: forall a. a -> AVar a -> Aff Unit
+put value avar = makeAff \k -> do
+  c <- AVar.put value avar k
   pure (effectCanceler c)
 
 -- | Attempts to synchronously fill an AVar. If the AVar is already filled,
 -- | this will do nothing. Returns true or false depending on if it succeeded.
-tryPut ∷ ∀ a. a → AVar a → Aff Boolean
+tryPut :: forall a. a -> AVar a -> Aff Boolean
 tryPut value = liftEffect <<< AVar.tryPut value
 
 -- | Reads the AVar value. Unlike `take`, this will not leave the AVar empty.
 -- | If the AVar is empty, this will queue until it is filled. Multiple reads
 -- | will resolve at the same time, as soon as possible.
-read ∷ ∀ a. AVar a → Aff a
-read avar = makeAff \k → do
-  c ← AVar.read avar k
+read :: forall a. AVar a -> Aff a
+read avar = makeAff \k -> do
+  c <- AVar.read avar k
   pure (effectCanceler c)
 
 -- | Attempts to synchronously read an AVar. If the AVar is empty, this will
 -- | return `Nothing`.
-tryRead ∷ ∀ a. AVar a → Aff (Maybe a)
+tryRead :: forall a. AVar a -> Aff (Maybe a)
 tryRead = liftEffect <<< AVar.tryRead
 
 -- | Kills the AVar with an exception. All pending and future actions will
 -- | resolve immediately with the provided exception.
-kill ∷ ∀ a. Error → AVar a → Aff Unit
+kill :: forall a. Error -> AVar a -> Aff Unit
 kill error = liftEffect <<< AVar.kill error

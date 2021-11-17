@@ -11,6 +11,7 @@ New features:
 Bugfixes:
 
 Other improvements:
+- Added `purs-tidy` formatter (#27 by @thomashoneyman)
 
 ## [v4.0.0](https://github.com/purescript-contrib/purescript-avar/releases/tag/v4.0.0) - 2021-02-26
 
