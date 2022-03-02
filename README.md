@@ -4,7 +4,6 @@
 [![Release](https://img.shields.io/github/release/purescript-contrib/purescript-avar.svg)](https://github.com/purescript-contrib/purescript-avar/releases)
 [![Pursuit](https://pursuit.purescript.org/packages/purescript-avar/badge)](https://pursuit.purescript.org/packages/purescript-avar)
 [![Maintainer: garyb](https://img.shields.io/badge/maintainer-garyb-teal.svg)](https://github.com/garyb)
-[![Maintainer: thomashoneyman](https://img.shields.io/badge/maintainer-thomashoneyman-teal.svg)](https://github.com/thomashoneyman)
 
 Low-level interface for asynchronous variables.
 
