@@ -1,5 +1,3 @@
-"use strict";
-
 var AVar = function () {
 
   function MutableQueue () {
