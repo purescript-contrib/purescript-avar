@@ -10,7 +10,6 @@
   , "functions"
   , "maybe"
   , "prelude"
-  , "psci-support"
   , "refs"
   ]
 , packages = ./packages.dhall
