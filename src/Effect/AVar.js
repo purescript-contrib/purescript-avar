@@ -1,5 +1,3 @@
-"use strict";
-
 var AVar = function () {
 
   function MutableQueue () {
@@ -210,17 +208,17 @@ var AVar = function () {
   return AVar;
 }();
 
-exports.empty = function () {
+export function empty() {
   return new AVar(AVar.EMPTY);
-};
+}
 
-exports._newVar = function (value) {
+export function _newVar(value) {
   return function () {
     return new AVar(value);
   };
-};
+}
 
-exports._killVar = function (util, error, avar) {
+export function _killVar(util, error, avar) {
   return function () {
     if (avar.error === null) {
       avar.error = error;
@@ -228,9 +226,9 @@ exports._killVar = function (util, error, avar) {
       AVar.drainVar(util, avar);
     }
   };
-};
+}
 
-exports._putVar = function (util, value, avar, cb) {
+export function _putVar(util, value, avar, cb) {
   return function () {
     var cell = AVar.putLast(avar.puts, { cb: cb, value: value });
     AVar.drainVar(util, avar);
@@ -238,9 +236,9 @@ exports._putVar = function (util, value, avar, cb) {
       AVar.deleteCell(cell);
     };
   };
-};
+}
 
-exports._takeVar = function (util, avar, cb) {
+export function _takeVar(util, avar, cb) {
   return function () {
     var cell = AVar.putLast(avar.takes, cb);
     AVar.drainVar(util, avar);
@@ -248,9 +246,9 @@ exports._takeVar = function (util, avar, cb) {
       AVar.deleteCell(cell);
     };
   };
-};
+}
 
-exports._readVar = function (util, avar, cb) {
+export function _readVar(util, avar, cb) {
   return function () {
     var cell = AVar.putLast(avar.reads, cb);
     AVar.drainVar(util, avar);
@@ -258,9 +256,9 @@ exports._readVar = function (util, avar, cb) {
       AVar.deleteCell(cell);
     };
   };
-};
+}
 
-exports._tryPutVar = function (util, value, avar) {
+export function _tryPutVar(util, value, avar) {
   return function () {
     if (avar.value === AVar.EMPTY && avar.error === null) {
       avar.value = value;
@@ -270,9 +268,9 @@ exports._tryPutVar = function (util, value, avar) {
       return false;
     }
   };
-};
+}
 
-exports._tryTakeVar = function (util, avar) {
+export function _tryTakeVar(util, avar) {
   return function () {
     var value = avar.value;
     if (value === AVar.EMPTY) {
@@ -283,9 +281,9 @@ exports._tryTakeVar = function (util, avar) {
       return util.just(value);
     }
   };
-};
+}
 
-exports._tryReadVar = function (util, avar) {
+export function _tryReadVar(util, avar) {
   return function () {
     if (avar.value === AVar.EMPTY) {
       return util.nothing;
@@ -293,9 +291,9 @@ exports._tryReadVar = function (util, avar) {
       return util.just(avar.value);
     }
   };
-};
+}
 
-exports._status = function (util, avar) {
+export function _status(util, avar) {
   return function () {
     if (avar.error) {
       return util.killed(avar.error);
@@ -305,5 +303,5 @@ exports._status = function (util, avar) {
     }
     return util.filled(avar.value);
   };
-};
+}
 

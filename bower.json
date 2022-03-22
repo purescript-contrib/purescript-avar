@@ -23,17 +23,17 @@
     "tests"
   ],
   "dependencies": {
-    "purescript-aff": "^6.0.0",
-    "purescript-effect": "^3.0.0",
-    "purescript-either": "^5.0.0",
-    "purescript-exceptions": "^5.0.0",
-    "purescript-functions": "^5.0.0",
-    "purescript-maybe": "^5.0.0"
+    "purescript-aff": "main",
+    "purescript-effect": "master",
+    "purescript-either": "master",
+    "purescript-exceptions": "master",
+    "purescript-functions": "master",
+    "purescript-maybe": "master"
   },
   "devDependencies": {
-    "purescript-assert": "^5.0.0",
-    "purescript-console": "^5.0.0",
-    "purescript-refs": "^5.0.0",
-    "purescript-transformers": "^5.0.0"
+    "purescript-assert": "master",
+    "purescript-console": "master",
+    "purescript-refs": "master",
+    "purescript-transformers": "master"
   }
 }
