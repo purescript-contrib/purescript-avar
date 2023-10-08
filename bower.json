@@ -1,6 +1,6 @@
 {
   "name": "purescript-avar",
-  "homepage": "https://github.com/slamdata/purescript-avar",
+  "homepage": "https://github.com/purescript-contrib/purescript-avar",
   "authors": [
     "Nathan Faubion <nathan@n-son.com>"
   ],
@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/purescript-contrib/purescript-avar.git"
   },
-  "main": "",
+  "main": [],
   "keywords": [
     "PureScript",
     "AVar"
