@@ -1,0 +1,27 @@
+package:
+  name: avar
+  publish:
+    license: Apache-2.0
+    version: 5.0.0
+    location:
+      githubOwner: purescript-contrib
+      githubRepo: purescript-avar
+  dependencies:
+    - aff
+    - effect
+    - either
+    - exceptions
+    - functions
+    - maybe
+    - prelude
+  test:
+    main: Test.Main
+    dependencies:
+      - assert
+      - console
+      - foldable-traversable
+      - refs
+workspace:
+  extraPackages: {}
+  packageSet:
+    registry: 60.5.0

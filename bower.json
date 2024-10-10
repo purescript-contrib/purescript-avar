@@ -21,19 +21,5 @@
     "bower_components",
     "test",
     "tests"
-  ],
-  "dependencies": {
-    "purescript-aff": "^7.0.0",
-    "purescript-effect": "^4.0.0",
-    "purescript-either": "^6.0.0",
-    "purescript-exceptions": "^6.0.0",
-    "purescript-functions": "^6.0.0",
-    "purescript-maybe": "^6.0.0"
-  },
-  "devDependencies": {
-    "purescript-assert": "^6.0.0",
-    "purescript-console": "^6.0.0",
-    "purescript-refs": "^6.0.0",
-    "purescript-transformers": "^6.0.0"
-  }
+  ]
 }
