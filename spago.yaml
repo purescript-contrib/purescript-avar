@@ -1,5 +1,6 @@
 package:
   name: avar
+  description: Low-level interface for asynchronous variables
   publish:
     license: Apache-2.0
     version: 5.0.0
@@ -7,13 +8,13 @@ package:
       githubOwner: purescript-contrib
       githubRepo: purescript-avar
   dependencies:
-    - aff
-    - effect
-    - either
-    - exceptions
-    - functions
-    - maybe
-    - prelude
+    - aff: ">=8.0.0 <9.0.0"
+    - effect: ">=4.0.0 <5.0.0"
+    - either: ">=6.1.0 <7.0.0"
+    - exceptions: ">=6.1.0 <7.0.0"
+    - functions: ">=6.0.0 <7.0.0"
+    - maybe: ">=6.0.0 <7.0.0"
+    - prelude: ">=6.0.1 <7.0.0"
   test:
     main: Test.Main
     dependencies:
