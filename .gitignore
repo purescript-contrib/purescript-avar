@@ -1,4 +1,5 @@
 .*
+!.npmrc
 !.gitignore
 !.github
 !.editorconfig
