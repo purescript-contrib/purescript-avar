@@ -11,16 +11,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up PureScript toolchain
         uses: purescript-contrib/setup-purescript@main
         with:
-          purescript: "unstable"
+          purescript: "latest"
           purs-tidy: "latest"
+          spago: "latest"
 
       - name: Cache PureScript dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           key: ${{ runner.os }}-spago-${{ hashFiles('**/*.dhall') }}
           path: |
@@ -30,10 +31,10 @@ jobs:
       - name: Set up Node toolchain
         uses: actions/setup-node@v2
         with:
-          node-version: "14.x"
+          node-version: "20.x"
 
       - name: Cache NPM dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         env:
           cache-name: cache-node-modules
         with:
@@ -58,9 +59,5 @@ jobs:
 
       - name: Verify Bower & Pulp
         run: |
-          npm install bower pulp@16.0.0-0
+          npm install bower
           npx bower install
-          npx pulp build -- --censor-lib --strict
-          if [ -d "test" ]; then
-            npx pulp test
-          fi

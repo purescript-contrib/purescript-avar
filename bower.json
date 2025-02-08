@@ -23,7 +23,7 @@
     "tests"
   ],
   "dependencies": {
-    "purescript-aff": "^7.0.0",
+    "purescript-aff": ">=7.0.0 <9.0.0",
     "purescript-effect": "^4.0.0",
     "purescript-either": "^6.0.0",
     "purescript-exceptions": "^6.0.0",
