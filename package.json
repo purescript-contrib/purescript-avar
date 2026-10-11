@@ -1,13 +1,10 @@
 {
   "private": true,
   "scripts": {
-    "build": "eslint src && spago build --purs-args '--censor-lib --strict'",
-    "test": "spago test --no-install"
+    "build": "oxlint src && spago build",
+    "test": "spago test"
   },
   "devDependencies": {
-    "eslint": "^9.20.0",
-    "purescript": "^0.15.15",
-    "purescript-psa": "^0.9.0",
-    "spago": "^0.21.0"
+    "oxlint": "^1.87.0"
   }
 }
