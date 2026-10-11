@@ -11,6 +11,10 @@ New features:
 Bugfixes:
 
 Other improvements:
+
+## [v5.0.2](https://github.com/purescript-contrib/purescript-avar/releases/tag/v5.0.2) - 2026-10-11
+
+Other improvements:
 - Migrate to registry-backed Spago and update repository tooling.
 
 ## [v5.0.0](https://github.com/purescript-contrib/purescript-avar/releases/tag/v5.0.0) - 2022-04-27
